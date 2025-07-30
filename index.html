@@ -2,234 +2,134 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>SparkShare 🔐</title>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>SparkShare ✨</title>
+  <link rel="manifest" href="manifest.json" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
   <style>
     body {
-      margin: 0;
-      padding: 20px;
-      font-family: 'Segoe UI', sans-serif;
-      background-color: #121212;
-      color: #f0f0f0;
+      font-family: sans-serif;
+      background: #fdf6ff;
+      padding: 2rem;
+      max-width: 600px;
+      margin: auto;
+      color: #333;
     }
-
     h1 {
-      color: #6cf;
+      text-align: center;
+      color: #9b59b6;
     }
-
-    input, button {
-      padding: 10px;
-      font-size: 1em;
-      border: none;
-      border-radius: 6px;
+    input[type="file"] {
+      margin-bottom: 1rem;
     }
-
-    #password {
-      background-color: #1f1f1f;
-      color: white;
+    .file-list {
+      margin-top: 2rem;
     }
-
-    button {
-      background-color: #6cf;
-      color: black;
-      cursor: pointer;
-      transition: background-color 0.2s;
-    }
-
-    button:hover {
-      background-color: #4ac;
-    }
-
-    #app-screen {
-      margin-top: 20px;
-    }
-
-    ul {
-      list-style: none;
-      padding: 0;
-    }
-
-    li {
-      margin: 10px 0;
-      background-color: #1f1f1f;
-      padding: 10px;
-      border-radius: 8px;
+    .file-item {
       display: flex;
       justify-content: space-between;
-      align-items: center;
+      margin: 0.5rem 0;
+      padding: 0.5rem;
+      background: #fff;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     }
-
-    .file-link {
-      color: #6cf;
-      text-decoration: none;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      max-width: 300px;
-      white-space: nowrap;
+    button {
+      margin-left: 0.5rem;
+      background: #9b59b6;
+      color: white;
+      border: none;
+      padding: 5px 10px;
+      border-radius: 5px;
+      cursor: pointer;
     }
-
-    .file-link:hover {
-      white-space: normal;
-    }
-
-    .timestamp {
-      font-size: 0.8em;
-      color: #aaa;
-      margin-left: 15px;
-    }
-
-    #drop-zone {
-      margin-top: 20px;
-      padding: 30px;
-      border: 2px dashed #444;
-      border-radius: 10px;
-      text-align: center;
-      background-color: #1f1f1f;
-      transition: border-color 0.3s;
-    }
-
-    #drop-zone.dragover {
-      border-color: #6cf;
-    }
-
-    .hidden {
-      display: none;
+    button:hover {
+      background: #8e44ad;
     }
   </style>
 </head>
 <body>
+  <h1>SparkShare ✨</h1>
+  <input type="file" id="fileInput" />
+  <button onclick="uploadFile()">Upload</button>
 
-  <h1>⚡ SparkShare 🔐</h1>
-
-  <div id="login-screen">
-    <input type="password" id="password" placeholder="Enter secret password" />
-    <button onclick="checkPassword()">Enter</button>
-  </div>
-
-  <div id="app-screen" class="hidden">
-    <input type="file" id="fileInput" />
-    <button onclick="uploadFile()">Upload</button>
-
-    <div id="drop-zone">or drag and drop files here ✨</div>
-
-    <h2>Uploaded Files:</h2>
-    <ul id="fileList"></ul>
+  <div class="file-list" id="fileList">
+    <h2>Files</h2>
+    <div id="filesContainer"></div>
   </div>
 
   <script>
-    const SECRET_PASSWORD = 'skycastle//845'; // Change this!
-    const SUPABASE_URL = 'https://hjoxgpuxwzkcyaztehmy.supabase.co'; // Change this!
-    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imhqb3hncHV4d3prY3lhenRlaG15Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTM4NzcwOTYsImV4cCI6MjA2OTQ1MzA5Nn0.eZ500tIWHZL0vs2Vfb54n9zd1iYraGdytzC9e6tuBVI'; // Change this!
-    const BUCKET = 'fileshare';
+    const supabaseUrl = 'https://hjoxgpuxwzkcyaztehmy.supabase.co';
+    const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imhqb3hncHV4d3prY3lhenRlaG15Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTM4NzcwOTYsImV4cCI6MjA2OTQ1MzA5Nn0.eZ500tIWHZL0vs2Vfb54n9zd1iYraGdytzC9e6tuBVI';
+    const supabase = supabase.createClient(supabaseUrl, supabaseKey);
+    const bucket = 'sparkshare';
 
-    const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-
-    function checkPassword() {
-      const entered = document.getElementById('password').value;
-      if (entered === SECRET_PASSWORD) {
-        document.getElementById('login-screen').classList.add('hidden');
-        document.getElementById('app-screen').classList.remove('hidden');
-        listFiles();
-      } else {
-        alert('Wrong password!');
-      }
-    }
-
-    async function uploadFile(file = null) {
-      if (!file) file = document.getElementById('fileInput').files[0];
-      if (!file) return;
-
-      const timestamp = Date.now();
-      const fileName = `${timestamp}_${file.name}`;
-
-      const { error } = await supabase
-        .storage
-        .from(BUCKET)
-        .upload(fileName, file, { upsert: true });
+    async function listFiles() {
+      const { data, error } = await supabase.storage.from(bucket).list();
+      const container = document.getElementById('filesContainer');
+      container.innerHTML = '';
 
       if (error) {
-        alert('Upload failed: ' + error.message);
+        container.innerText = 'Error fetching files.';
+        return;
+      }
+
+      data.forEach(file => {
+        const fileDiv = document.createElement('div');
+        fileDiv.className = 'file-item';
+        fileDiv.innerHTML = `
+          <span>${file.name}</span>
+          <span>
+            <button onclick="downloadFile('${file.name}')">⬇️</button>
+            <button onclick="deleteFile('${file.name}')">🗑️</button>
+          </span>
+        `;
+        container.appendChild(fileDiv);
+      });
+    }
+
+    async function uploadFile() {
+      const fileInput = document.getElementById('fileInput');
+      const file = fileInput.files[0];
+      if (!file) return alert("No file selected.");
+
+      const { error } = await supabase.storage.from(bucket).upload(file.name, file, {
+        cacheControl: '3600',
+        upsert: true
+      });
+
+      if (error) {
+        alert('Upload failed!');
       } else {
         alert('Uploaded!');
         listFiles();
       }
     }
 
-    async function listFiles() {
-      const { data, error } = await supabase
-        .storage
-        .from(BUCKET)
-        .list('', { sortBy: { column: 'name', order: 'desc' } });
-
-      const list = document.getElementById('fileList');
-      list.innerHTML = '';
-
-      if (data) {
-        data.forEach(file => {
-          const li = document.createElement('li');
-
-          // Extract original file name + timestamp
-          const [timestamp, ...rest] = file.name.split('_');
-          const originalName = rest.join('_');
-          const timeStr = new Date(parseInt(timestamp)).toLocaleString();
-
-          const link = document.createElement('a');
-          link.href = `${SUPABASE_URL}/storage/v1/object/public/${BUCKET}/${file.name}`;
-          link.textContent = originalName;
-          link.target = '_blank';
-          link.className = 'file-link';
-
-          const time = document.createElement('span');
-          time.className = 'timestamp';
-          time.textContent = `🕓 ${timeStr}`;
-
-          const delBtn = document.createElement('button');
-          delBtn.textContent = '❌';
-          delBtn.onclick = () => deleteFile(file.name);
-
-          li.appendChild(link);
-          li.appendChild(time);
-          li.appendChild(delBtn);
-          list.appendChild(li);
-        });
-      }
+    async function downloadFile(filename) {
+      const { data, error } = await supabase.storage.from(bucket).createSignedUrl(filename, 60);
+      if (error) return alert('Download error!');
+      window.open(data.signedUrl, '_blank');
     }
 
     async function deleteFile(filename) {
-      const confirmDelete = confirm(`Delete "${filename.split('_').slice(1).join('_')}"?`);
-      if (!confirmDelete) return;
-
-      const { error } = await supabase
-        .storage
-        .from(BUCKET)
-        .remove([filename]);
-
+      const { error } = await supabase.storage.from(bucket).remove([filename]);
       if (error) {
-        alert('Delete failed: ' + error.message);
+        alert('Delete failed!');
       } else {
         alert('Deleted!');
         listFiles();
       }
     }
 
-    // Drag and drop setup
-    const dropZone = document.getElementById('drop-zone');
+    listFiles();
 
-    dropZone.addEventListener('dragover', (e) => {
-      e.preventDefault();
-      dropZone.classList.add('dragover');
-    });
-
-    dropZone.addEventListener('dragleave', () => {
-      dropZone.classList.remove('dragover');
-    });
-
-    dropZone.addEventListener('drop', (e) => {
-      e.preventDefault();
-      dropZone.classList.remove('dragover');
-      const file = e.dataTransfer.files[0];
-      uploadFile(file);
-    });
+    // Service worker
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('service-worker.js')
+        .then(() => console.log('✅ Service Worker Registered!'))
+        .catch(err => console.log('❌ SW Error:', err));
+    }
   </script>
 </body>
 </html>
