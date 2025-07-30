@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>SkyCastle Share 🏰</title>
+  <title>FileShare</title>
   <link rel="manifest" href="manifest.json" />
   <link rel="icon" type="image/png" href="icon-192.png" />
   <style>
@@ -41,14 +41,7 @@
   </style>
 </head>
 <body>
-  <h1>🏰 SkyCastle Share</h1>
-
-  <div id="password-page">
-    <p>Enter password to access:</p>
-    <input type="password" id="password-input" placeholder="Enter password" />
-    <button id="enter-btn">Enter</button>
-    <p id="wrong-pass" style="color:red; display:none;">Wrong password!</p>
-  </div>
+  <h1>FileShare</h1>
 
   <div id="app" class="hidden">
     <h2>Upload a file</h2>
@@ -58,23 +51,7 @@
     <h2>📂 Uploaded Files</h2>
     <div class="file-list" id="file-list"></div>
   </div>
-
-  <script type="module">
-    const PASSWORD = "skycastle//845";
-
-    document.getElementById("enter-btn").addEventListener("click", checkPassword);
-
-    function checkPassword() {
-      const input = document.getElementById('password-input').value;
-      if (input === PASSWORD) {
-        document.getElementById('password-page').classList.add('hidden');
-        document.getElementById('app').classList.remove('hidden');
-        loadFiles();
-      } else {
-        document.getElementById('wrong-pass').style.display = 'block';
-      }
-    }
-
+  
     import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm";
     const supabaseUrl = 'https://hjoxgpuxwzkcyaztehmy.supabase.co';
     const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imhqb3hncHV4d3prY3lhenRlaG15Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTM4NzcwOTYsImV4cCI6MjA2OTQ1MzA5Nn0.eZ500tIWHZL0vs2Vfb54n9zd1iYraGdytzC9e6tuBVI';
