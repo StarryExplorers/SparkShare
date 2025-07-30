@@ -46,14 +46,14 @@
   <div id="password-page">
     <p>Enter password to access:</p>
     <input type="password" id="password-input" placeholder="Enter password" />
-    <button onclick="checkPassword()">Enter</button>
+    <button id="enter-btn">Enter</button>
     <p id="wrong-pass" style="color:red; display:none;">Wrong password!</p>
   </div>
 
   <div id="app" class="hidden">
     <h2>Upload a file</h2>
     <input type="file" id="file-input" />
-    <button onclick="uploadFile()">Upload</button>
+    <button id="upload-btn">Upload</button>
 
     <h2>📂 Uploaded Files</h2>
     <div class="file-list" id="file-list"></div>
@@ -61,6 +61,8 @@
 
   <script type="module">
     const PASSWORD = "skycastle//845";
+
+    document.getElementById("enter-btn").addEventListener("click", checkPassword);
 
     function checkPassword() {
       const input = document.getElementById('password-input').value;
@@ -73,12 +75,13 @@
       }
     }
 
-    // Supabase setup
     import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm";
     const supabaseUrl = 'https://hjoxgpuxwzkcyaztehmy.supabase.co';
     const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imhqb3hncHV4d3prY3lhenRlaG15Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTM4NzcwOTYsImV4cCI6MjA2OTQ1MzA5Nn0.eZ500tIWHZL0vs2Vfb54n9zd1iYraGdytzC9e6tuBVI';
     const supabase = createClient(supabaseUrl, supabaseKey);
     const bucket = "files";
+
+    document.getElementById("upload-btn").addEventListener("click", uploadFile);
 
     async function uploadFile() {
       const fileInput = document.getElementById("file-input");
@@ -86,11 +89,9 @@
       if (!file) return alert("Choose a file first!");
 
       const fileName = `${Date.now()}_${file.name}`;
-
       const { error } = await supabase.storage.from(bucket).upload(fileName, file);
-      if (error) {
-        alert("Upload error: " + error.message);
-      } else {
+      if (error) alert("Upload error: " + error.message);
+      else {
         alert("Uploaded!");
         loadFiles();
       }
@@ -100,14 +101,13 @@
       const { data, error } = await supabase.storage.from(bucket).list('', { limit: 100 });
       const list = document.getElementById("file-list");
       list.innerHTML = '';
-
       if (error) {
         list.innerHTML = "Failed to load files 😢";
         return;
       }
 
       for (let file of data) {
-        const urlRes = await supabase.storage.from(bucket).createSignedUrl(file.name, 60 * 60);
+        const urlRes = await supabase.storage.from(bucket).createSignedUrl(file.name, 3600);
         const fileUrl = urlRes.data.signedUrl;
 
         const div = document.createElement("div");
@@ -115,24 +115,24 @@
         div.innerHTML = `
           <span>${file.name}</span>
           <div>
-            <a href="${fileUrl}" download>
-              <button>Download</button>
-            </a>
-            <button class="delete" onclick="deleteFile('${file.name}')">Delete</button>
+            <a href="${fileUrl}" download><button>Download</button></a>
+            <button class="delete" data-name="${file.name}">Delete</button>
           </div>
         `;
         list.appendChild(div);
       }
-    }
 
-    async function deleteFile(fileName) {
-      const { error } = await supabase.storage.from(bucket).remove([fileName]);
-      if (error) {
-        alert("Delete error: " + error.message);
-      } else {
-        alert("Deleted!");
-        loadFiles();
-      }
+      document.querySelectorAll(".delete").forEach(btn => {
+        btn.addEventListener("click", async (e) => {
+          const fileName = e.target.dataset.name;
+          const { error } = await supabase.storage.from(bucket).remove([fileName]);
+          if (error) alert("Delete error: " + error.message);
+          else {
+            alert("Deleted!");
+            loadFiles();
+          }
+        });
+      });
     }
   </script>
 </body>
