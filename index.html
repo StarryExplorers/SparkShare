@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>SkyCastle Share 🏰</title>
+  <title>SparkShare</title>
   <link rel="manifest" href="manifest.json" />
   <link rel="icon" type="image/png" href="icon-192.png" />
   <style>
@@ -41,7 +41,7 @@
   </style>
 </head>
 <body>
-  <h1>🏰 SkyCastle Share</h1>
+  <h1>SparkShare</h1>
 
   <div id="password-page">
     <p>Enter password to access:</p>
@@ -115,12 +115,26 @@
         div.innerHTML = `
           <span>${file.name}</span>
           <div>
-            <a href="${fileUrl}" download><button>Download</button></a>
+            <button class="download" data-url="${fileUrl}" data-name="${file.name}">Download</button>
             <button class="delete" data-name="${file.name}">Delete</button>
           </div>
         `;
         list.appendChild(div);
       }
+
+      document.querySelectorAll(".download").forEach(btn => {
+        btn.addEventListener("click", (e) => {
+          const url = e.target.dataset.url;
+          const name = e.target.dataset.name;
+
+          const a = document.createElement("a");
+          a.href = url;
+          a.download = name;
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+        });
+      });
 
       document.querySelectorAll(".delete").forEach(btn => {
         btn.addEventListener("click", async (e) => {
