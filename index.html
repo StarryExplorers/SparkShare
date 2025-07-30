@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>SparkShare</title>
+  <title>SkyCastle Share 🏰</title>
   <link rel="manifest" href="manifest.json" />
   <link rel="icon" type="image/png" href="icon-192.png" />
   <style>
@@ -41,7 +41,7 @@
   </style>
 </head>
 <body>
-  <h1>SparkShare</h1>
+  <h1>🏰 SkyCastle Share</h1>
 
   <div id="password-page">
     <p>Enter password to access:</p>
@@ -89,7 +89,10 @@
       if (!file) return alert("Choose a file first!");
 
       const fileName = `${Date.now()}_${file.name}`;
-      const { error } = await supabase.storage.from(bucket).upload(fileName, file);
+      const { error } = await supabase.storage
+        .from(bucket)
+        .upload(fileName, file, { cacheControl: '3600' });
+
       if (error) alert("Upload error: " + error.message);
       else {
         alert("Uploaded!");
@@ -107,15 +110,12 @@
       }
 
       for (let file of data) {
-        const urlRes = await supabase.storage.from(bucket).createSignedUrl(file.name, 3600);
-        const fileUrl = urlRes.data.signedUrl;
-
         const div = document.createElement("div");
         div.className = "file-item";
         div.innerHTML = `
           <span>${file.name}</span>
           <div>
-            <button class="download" data-url="${fileUrl}" data-name="${file.name}">Download</button>
+            <button class="download" data-name="${file.name}">Download</button>
             <button class="delete" data-name="${file.name}">Delete</button>
           </div>
         `;
@@ -123,16 +123,22 @@
       }
 
       document.querySelectorAll(".download").forEach(btn => {
-        btn.addEventListener("click", (e) => {
-          const url = e.target.dataset.url;
-          const name = e.target.dataset.name;
+        btn.addEventListener("click", async (e) => {
+          const fileName = e.target.dataset.name;
+          const { data, error } = await supabase.storage.from(bucket).download(fileName);
+          if (error) {
+            alert("Download error: " + error.message);
+            return;
+          }
 
+          const blobUrl = URL.createObjectURL(data);
           const a = document.createElement("a");
-          a.href = url;
-          a.download = name;
+          a.href = blobUrl;
+          a.download = fileName;
           document.body.appendChild(a);
           a.click();
           document.body.removeChild(a);
+          URL.revokeObjectURL(blobUrl);
         });
       });
 
